@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:16
+    container_name: hsdcode-db
+    environment:
+      POSTGRES_USER: hsd
+      POSTGRES_PASSWORD: hsd_dev_password
+      POSTGRES_DB: hsdcode
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"   # Tarayıcıdan veritabanını görmek için
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025"   # Şifre sıfırlama e-postalarını yerelde görmek için
+      - "1025:1025"
+
+volumes:
+  pgdata:
