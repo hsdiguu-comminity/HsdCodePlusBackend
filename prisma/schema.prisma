@@ -1,0 +1,291 @@
+// HSDCode+ veritabanı şeması — bkz. docs/02_BACKEND.md, bölüm 3.
+// Bağlantı adresi prisma.config.ts içinde, .env dosyasındaki DATABASE_URL'den okunur.
+// Kodda alan adları camelCase (passwordHash), veritabanında snake_case (password_hash) olarak tutulur.
+// Tablo yapısı yalnızca migration ile değiştirilir: npm run db:migrate
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Enum'lar ----------
+
+enum Role {
+  MEMBER
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  RESTRICTED
+  BANNED
+}
+
+enum PostStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ScoreSource {
+  QUIZ
+  POST_APPROVED
+  BONUS
+}
+
+enum BanType {
+  RESTRICT
+  BAN
+}
+
+// ---------- Topluluk & Kullanıcı ----------
+
+model HsdCommunity {
+  id         String @id @default(cuid())
+  name       String @unique
+  university String
+  city       String
+
+  users User[]
+
+  @@map("hsd_communities")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  firstName    String     @map("first_name")
+  lastName     String     @map("last_name")
+  username     String     @unique
+  communityId  String     @map("community_id")
+  role         Role       @default(MEMBER)
+  status       UserStatus @default(PENDING)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  community      HsdCommunity         @relation(fields: [communityId], references: [id])
+  profile        Profile?
+  posts          Post[]
+  createdQuizzes Quiz[]
+  quizAttempts   QuizAttempt[]
+  scoreEvents    ScoreEvent[]
+  bans           Ban[]                @relation("BannedUser")
+  issuedBans     Ban[]                @relation("BanAdmin")
+  resetTokens    PasswordResetToken[]
+  auditLogs      AuditLog[]
+
+  @@index([communityId])
+  @@index([status])
+  @@map("users")
+}
+
+model Profile {
+  userId      String  @id @map("user_id")
+  bio         String?
+  avatarUrl   String? @map("avatar_url")
+  githubUrl   String? @map("github_url")
+  linkedinUrl String? @map("linkedin_url")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+// ---------- Kategori & Blog ----------
+
+model Category {
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
+
+  posts   Post[]
+  quizzes Quiz[]
+
+  @@map("categories")
+}
+
+model Post {
+  id           String     @id @default(cuid())
+  authorId     String     @map("author_id")
+  categoryId   String     @map("category_id")
+  title        String
+  slug         String     @unique
+  contentMd    String     @map("content_md")
+  coverUrl     String?    @map("cover_url")
+  status       PostStatus @default(PENDING)
+  rejectReason String?    @map("reject_reason")
+  publishedAt  DateTime?  @map("published_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  author   User        @relation(fields: [authorId], references: [id])
+  category Category    @relation(fields: [categoryId], references: [id])
+  images   PostImage[]
+
+  @@index([status, publishedAt])
+  @@index([authorId])
+  @@index([categoryId])
+  @@map("posts")
+}
+
+model PostImage {
+  id     String @id @default(cuid())
+  postId String @map("post_id")
+  url    String
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@map("post_images")
+}
+
+// ---------- Quiz ----------
+
+model Quiz {
+  id           String    @id @default(cuid())
+  categoryId   String    @map("category_id")
+  title        String
+  description  String?
+  timeLimitSec Int       @map("time_limit_sec")
+  startsAt     DateTime? @map("starts_at")
+  endsAt       DateTime? @map("ends_at")
+  isPublished  Boolean   @default(false) @map("is_published")
+  createdById  String    @map("created_by")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  category  Category      @relation(fields: [categoryId], references: [id])
+  createdBy User          @relation(fields: [createdById], references: [id])
+  questions Question[]
+  attempts  QuizAttempt[]
+
+  @@index([categoryId, isPublished])
+  @@map("quizzes")
+}
+
+model Question {
+  id     String @id @default(cuid())
+  quizId String @map("quiz_id")
+  text   String
+  points Int    @default(10)
+  order  Int
+
+  quiz    Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options Option[]
+  answers AttemptAnswer[]
+
+  @@index([quizId, order])
+  @@map("questions")
+}
+
+model Option {
+  id         String  @id @default(cuid())
+  questionId String  @map("question_id")
+  text       String
+  isCorrect  Boolean @default(false) @map("is_correct")
+
+  question Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  AttemptAnswer[]
+
+  @@index([questionId])
+  @@map("options")
+}
+
+model QuizAttempt {
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  quizId     String    @map("quiz_id")
+  score      Int       @default(0)
+  startedAt  DateTime  @default(now()) @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+
+  user    User            @relation(fields: [userId], references: [id])
+  quiz    Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers AttemptAnswer[]
+
+  // Bir quiz bir kullanıcı tarafından yalnızca bir kez çözülebilir
+  @@unique([userId, quizId])
+  @@map("quiz_attempts")
+}
+
+model AttemptAnswer {
+  attemptId  String @map("attempt_id")
+  questionId String @map("question_id")
+  optionId   String @map("option_id")
+
+  attempt  QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  option   Option      @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@id([attemptId, questionId])
+  @@map("attempt_answers")
+}
+
+// ---------- Puan (leaderboard kaynağı) ----------
+
+model ScoreEvent {
+  id        String      @id @default(cuid())
+  userId    String      @map("user_id")
+  points    Int
+  source    ScoreSource
+  refId     String?     @map("ref_id")
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@map("score_events")
+}
+
+// ---------- Moderasyon & Güvenlik ----------
+
+model Ban {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  type      BanType
+  reason    String
+  adminId   String    @map("admin_id")
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user  User @relation("BannedUser", fields: [userId], references: [id])
+  admin User @relation("BanAdmin", fields: [adminId], references: [id])
+
+  @@index([userId])
+  @@map("bans")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String   @map("admin_id")
+  action     String
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  admin User @relation(fields: [adminId], references: [id])
+
+  @@index([createdAt])
+  @@map("audit_logs")
+}
