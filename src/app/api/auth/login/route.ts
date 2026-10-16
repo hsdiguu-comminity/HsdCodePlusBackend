@@ -5,6 +5,7 @@ import { loginSchema } from "@/lib/validations/auth";
 import { ApiError, handleApiError, readJson } from "@/lib/errors";
 import { RateLimits, getClientIp, rateLimit } from "@/lib/rate-limit";
 import { findUserByEmail, toPublicUser } from "@/services/user.service";
+import { liftExpiredPenalty } from "@/services/admin.service";
 
 const invalidCredentials = () =>
   new ApiError(401, "INVALID_CREDENTIALS", "E-posta veya şifre hatalı");
@@ -18,10 +19,13 @@ export async function POST(req: Request) {
     if (!parsed.success) throw invalidCredentials();
     const { email, password } = parsed.data;
 
-    const user = await findUserByEmail(email);
-    if (!user || !(await verifyPassword(user.passwordHash, password))) {
+    const found = await findUserByEmail(email);
+    if (!found || !(await verifyPassword(found.passwordHash, password))) {
       throw invalidCredentials();
     }
+
+    // Süresi dolmuş ban/kısıtlama varsa önce kaldırılır
+    const user = await liftExpiredPenalty(found);
 
     // Durum mesajları yalnızca şifre doğruysa gösterilir (hesabın varlığı sızdırılmaz)
     if (user.status === "PENDING") {
