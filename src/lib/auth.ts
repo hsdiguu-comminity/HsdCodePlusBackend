@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { loginSchema } from "@/lib/validations/auth";
 import { verifyPassword } from "@/lib/password";
 import { findUserByEmail } from "@/services/user.service";
+import { liftExpiredPenalty } from "@/services/admin.service";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   basePath: "/api/auth",
@@ -21,9 +22,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
-        const user = await findUserByEmail(parsed.data.email);
-        if (!user) return null;
-        if (!(await verifyPassword(user.passwordHash, parsed.data.password))) return null;
+        const found = await findUserByEmail(parsed.data.email);
+        if (!found) return null;
+        if (!(await verifyPassword(found.passwordHash, parsed.data.password))) return null;
+
+        const user = await liftExpiredPenalty(found);
 
         // Onay bekleyen ve banlı kullanıcılar oturum açamaz
         if (user.status === "PENDING" || user.status === "BANNED") return null;

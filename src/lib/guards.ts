@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Errors } from "@/lib/errors";
+import { liftExpiredPenalty } from "@/services/admin.service";
 
 type RequireUserOptions = {
   // Kısıtlanmış (RESTRICTED) kullanıcıların da geçmesine izin verilsin mi?
@@ -15,8 +16,11 @@ export async function requireUser(options: RequireUserOptions = {}) {
   const session = await auth();
   if (!session?.user?.id) throw Errors.unauthorized();
 
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!user) throw Errors.unauthorized();
+  const found = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (!found) throw Errors.unauthorized();
+
+  // Süresi dolmuş kısıtlama/ban varsa önce kaldırılır
+  const user = await liftExpiredPenalty(found);
 
   if (user.status === "BANNED") throw Errors.forbidden("Hesabınız askıya alınmıştır");
   if (user.status === "PENDING") {
