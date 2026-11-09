@@ -1,0 +1,33 @@
+[
+  {
+    "category_slug": "yazilim",
+    "title": "Python Temelleri - Deneme",
+    "description": "İçe aktarma sistemini test etmek için örnek test.",
+    "time_limit_sec": 300,
+    "created_by_email": "quiz-test@localhost.invalid",
+    "questions": [
+      {
+        "text": "Python'da ekrana yazı yazdırmak için hangi fonksiyon kullanılır?",
+        "points": 10,
+        "options": [
+          {
+            "text": "print()",
+            "is_correct": true
+          },
+          {
+            "text": "echo()",
+            "is_correct": false
+          },
+          {
+            "text": "write()",
+            "is_correct": false
+          },
+          {
+            "text": "output()",
+            "is_correct": false
+          }
+        ]
+      }
+    ]
+  }
+]

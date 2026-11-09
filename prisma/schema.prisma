@@ -1,0 +1,266 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  MEMBER
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  RESTRICTED
+  BANNED
+}
+
+enum PostStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ScoreEventSource {
+  QUIZ
+  POST_APPROVED
+  BONUS
+}
+
+enum BanType {
+  RESTRICT
+  BAN
+}
+
+model HsdCommunity {
+  id         Int    @id @default(autoincrement())
+  name       String
+  university String
+  city       String
+
+  users User[]
+
+  @@map("hsd_communities")
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  username     String     @unique
+  communityId  Int
+  role         UserRole   @default(MEMBER)
+  status       UserStatus @default(PENDING)
+  createdAt    DateTime   @default(now())
+
+  community           HsdCommunity         @relation(fields: [communityId], references: [id])
+  profile             Profile?
+  posts               Post[]
+  quizAttempts        QuizAttempt[]
+  scoreEvents         ScoreEvent[]
+  passwordResetTokens PasswordResetToken[]
+  createdQuizzes      Quiz[]               @relation("QuizCreator")
+  bans                Ban[]                @relation("UserBans")
+  adminBans           Ban[]                @relation("AdminBans")
+  auditLogs           AuditLog[]           @relation("AdminAuditLogs")
+
+  @@index([communityId, status])
+  @@map("users")
+}
+
+model Profile {
+  userId      Int     @id
+  bio         String?
+  avatarUrl   String?
+  githubUrl   String?
+  linkedinUrl String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("profiles")
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String
+  slug String @unique
+
+  posts   Post[]
+  quizzes Quiz[]
+
+  @@map("categories")
+}
+
+model Post {
+  id           Int        @id @default(autoincrement())
+  authorId     Int
+  categoryId   Int
+  title        String
+  slug         String     @unique
+  contentMd    String
+  coverUrl     String?
+  status       PostStatus @default(DRAFT)
+  rejectReason String?
+  publishedAt  DateTime?
+
+  author   User        @relation(fields: [authorId], references: [id])
+  category Category    @relation(fields: [categoryId], references: [id])
+  images   PostImage[]
+
+  @@index([status, publishedAt])
+  @@map("posts")
+}
+
+model Quiz {
+  id           Int       @id @default(autoincrement())
+  categoryId   Int
+  title        String
+  description  String?
+  timeLimitSec Int?
+  startsAt     DateTime?
+  endsAt       DateTime?
+  isPublished  Boolean   @default(false)
+  createdById  Int
+
+  category  Category      @relation(fields: [categoryId], references: [id])
+  createdBy User          @relation("QuizCreator", fields: [createdById], references: [id])
+  questions Question[]
+  attempts  QuizAttempt[]
+
+  @@index([isPublished, startsAt, endsAt])
+  @@index([categoryId, isPublished])
+  @@map("quizzes")
+}
+
+model Question {
+  id     Int    @id @default(autoincrement())
+  quizId Int
+  text   String
+  points Int
+  order  Int
+
+  quiz           Quiz            @relation(fields: [quizId], references: [id])
+  options        Option[]
+  attemptAnswers AttemptAnswer[]
+
+  @@unique([quizId, order])
+  @@map("questions")
+}
+
+model Option {
+  id         Int     @id @default(autoincrement())
+  questionId Int
+  text       String
+  isCorrect  Boolean @default(false)
+
+  question       Question        @relation(fields: [questionId], references: [id])
+  attemptAnswers AttemptAnswer[]
+
+  @@map("options")
+}
+
+model QuizAttempt {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  quizId     Int
+  score      Int
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+
+  user    User            @relation(fields: [userId], references: [id])
+  quiz    Quiz            @relation(fields: [quizId], references: [id])
+  answers AttemptAnswer[]
+
+  @@index([quizId, score])
+  @@index([userId, quizId])
+  @@map("quiz_attempts")
+}
+
+model AttemptAnswer {
+  id         Int @id @default(autoincrement())
+  attemptId  Int
+  questionId Int
+  optionId   Int
+
+  attempt  QuizAttempt @relation(fields: [attemptId], references: [id])
+  question Question    @relation(fields: [questionId], references: [id])
+  option   Option      @relation(fields: [optionId], references: [id])
+
+  @@unique([attemptId, questionId])
+  @@map("attempt_answers")
+}
+
+model ScoreEvent {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  points    Int
+  source    ScoreEventSource
+  refId     Int?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([createdAt, userId])
+  @@index([userId, createdAt])
+  @@map("score_events")
+}
+
+model Ban {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  type      BanType
+  reason    String
+  adminId   Int
+  expiresAt DateTime?
+
+  user  User @relation("UserBans", fields: [userId], references: [id])
+  admin User @relation("AdminBans", fields: [adminId], references: [id])
+
+  @@index([userId])
+  @@map("bans")
+}
+
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  adminId    Int
+  action     String
+  targetType String
+  targetId   Int
+  createdAt  DateTime @default(now())
+
+  admin User @relation("AdminAuditLogs", fields: [adminId], references: [id])
+
+  @@index([createdAt])
+  @@index([adminId, createdAt])
+  @@map("audit_logs")
+}
+
+model PostImage {
+  id     Int    @id @default(autoincrement())
+  postId Int
+  url    String
+
+  post Post @relation(fields: [postId], references: [id])
+
+  @@index([postId])
+  @@map("post_images")
+}

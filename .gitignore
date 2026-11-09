@@ -42,3 +42,7 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Test oturum çerezleri
+cookies.txt
+cookies-user2.txt

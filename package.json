@@ -1,0 +1,47 @@
+{
+  "name": "hsdcodeplusbackend",
+  "version": "1.0.0",
+  "description": "HSDCode+ API'si (Next.js Route Handlers + Prisma + PostgreSQL 16 + Auth.js).",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "prisma skills sync || exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hsdiguu-comminity/HsdCodePlusBackend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/hsdiguu-comminity/HsdCodePlusBackend/issues"
+  },
+  "homepage": "https://github.com/hsdiguu-comminity/HsdCodePlusBackend#readme",
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.0",
+    "bcryptjs": "^3.0.3",
+    "next": "^16.4.0",
+    "next-auth": "^5.0.0-beta.32",
+    "pg": "^8.23.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "prisma": "^7.10.0",
+    "typescript": "^6.0.3"
+  }
+}
