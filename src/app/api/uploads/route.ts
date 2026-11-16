@@ -27,8 +27,8 @@ export async function POST(req: Request) {
     if (!(file instanceof File)) throw Errors.badRequest("Yüklenecek bir görsel seçin");
 
     const bytes = Buffer.from(await file.arrayBuffer());
-    const { filename } = validateUpload(file, bytes);
-    const url = await saveUpload(filename, bytes);
+    const { filename, contentType } = validateUpload(file, bytes);
+    const url = await saveUpload(filename, bytes, contentType);
 
     return NextResponse.json({ url }, { status: 201 });
   } catch (error) {
