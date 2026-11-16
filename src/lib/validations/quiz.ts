@@ -49,6 +49,12 @@ export const updateQuizSchema = z.object({
 export const questionSchema = z
   .object({
     text: z.string({ error: "Soru metni zorunludur" }).trim().min(3, "Soru en az 3 karakter olmalı").max(2000),
+    explanation: z
+      .string()
+      .trim()
+      .max(2000, "Açıklama en fazla 2000 karakter olabilir")
+      .transform((value) => (value === "" ? null : value))
+      .nullish(),
     points: z.number().int().min(1, "Puan en az 1 olmalı").max(1000).default(10),
     order: z.number().int().min(0).optional(),
     options: z

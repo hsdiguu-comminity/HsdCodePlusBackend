@@ -23,6 +23,9 @@ export async function renderMarkdown(markdown: string): Promise<string> {
 export function excerpt(markdown: string, length = 200): string {
   const text = markdown
     .replace(/```[\s\S]*?```/g, " ")
+    // HTML etiketleri ve içerikleri (script/style) özete girmez
+    .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, " ")
+    .replace(/<[^>]*>/g, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
     .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
     .replace(/[#>*_`~|-]+/g, " ")

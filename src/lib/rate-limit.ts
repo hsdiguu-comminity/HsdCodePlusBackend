@@ -10,7 +10,10 @@ const globalForRateLimit = globalThis as unknown as { rateLimitBuckets?: Map<str
 const buckets = (globalForRateLimit.rateLimitBuckets ??= new Map<string, Bucket>());
 
 export const RateLimits = {
+  // Giriş iki katmanlı: hesap başına 5 deneme (şifre tahminini engeller) +
+  // IP başına 30 deneme (aynı yerden çok sayıda hesaba saldırıyı engeller)
   login: { limit: 5, windowMs: 15 * 60 * 1000 },
+  loginPerIp: { limit: 30, windowMs: 15 * 60 * 1000 },
   register: { limit: 3, windowMs: 60 * 60 * 1000 },
   forgotPassword: { limit: 3, windowMs: 60 * 60 * 1000 },
   resetPassword: { limit: 5, windowMs: 60 * 60 * 1000 },

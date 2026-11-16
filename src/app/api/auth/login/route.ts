@@ -13,11 +13,14 @@ const invalidCredentials = () =>
 // POST /api/auth/login — başarılıysa HttpOnly oturum çerezi oluşturur
 export async function POST(req: Request) {
   try {
-    rateLimit(`login:${getClientIp(req)}`, RateLimits.login);
+    rateLimit(`login-ip:${getClientIp(req)}`, RateLimits.loginPerIp);
 
     const parsed = loginSchema.safeParse(await readJson(req));
     if (!parsed.success) throw invalidCredentials();
     const { email, password } = parsed.data;
+
+    // Aynı hesaba 15 dakikada en fazla 5 deneme (IP bilgisi gelmese bile şifre tahmini engellenir)
+    rateLimit(`login-account:${email}`, RateLimits.login);
 
     const found = await findUserByEmail(email);
     if (!found || !(await verifyPassword(found.passwordHash, password))) {

@@ -42,7 +42,11 @@ export async function listPublishedPosts(query: PostListQuery) {
   ]);
 
   return {
-    items: posts.map(({ contentMd, ...post }) => ({ ...post, excerpt: excerpt(contentMd) })),
+    items: posts.map(({ contentMd, ...post }) => ({
+      ...post,
+      excerpt: excerpt(contentMd),
+      readMinutes: readMinutes(contentMd),
+    })),
     page: query.page,
     pageSize: query.pageSize,
     total,
@@ -61,8 +65,18 @@ export async function getPublishedPost(slug: string) {
   });
   if (!post) throw Errors.notFound("Yazı bulunamadı");
 
-  // contentHtml güvenli HTML'dir; frontend bunu gösterir, contentMd düzenleme içindir
-  return { ...post, contentHtml: await renderMarkdown(post.contentMd) };
+  // contentHtml güvenli HTML'dir; contentMd ise frontend'in kendi Markdown görüntüleyicisi içindir
+  return {
+    ...post,
+    readMinutes: readMinutes(post.contentMd),
+    contentHtml: await renderMarkdown(post.contentMd),
+  };
+}
+
+// Dakikada ~200 kelime okuma hızına göre tahmini okuma süresi
+function readMinutes(markdown: string) {
+  const words = markdown.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
 }
 
 // ---------------- Yazar ----------------

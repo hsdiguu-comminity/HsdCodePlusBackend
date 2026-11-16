@@ -36,7 +36,8 @@ export async function listPublishedQuizzes(categorySlug?: string) {
     orderBy: { createdAt: "desc" },
     include: {
       category: { select: { id: true, name: true, slug: true } },
-      _count: { select: { questions: true, attempts: true } },
+      questions: { select: { points: true } },
+      _count: { select: { attempts: true } },
     },
   });
 
@@ -49,7 +50,8 @@ export async function listPublishedQuizzes(categorySlug?: string) {
     startsAt: quiz.startsAt,
     endsAt: quiz.endsAt,
     status: getQuizWindowStatus(quiz),
-    questionCount: quiz._count.questions,
+    questionCount: quiz.questions.length,
+    totalPoints: quiz.questions.reduce((sum, q) => sum + q.points, 0),
     attemptCount: quiz._count.attempts,
   }));
 }
@@ -194,10 +196,7 @@ export async function submitQuiz(userId: string, quizId: string, input: SubmitQu
     throw new ApiError(400, "TIME_UP", "Süre dolduğu için cevaplarınız kabul edilmedi");
   }
 
-  const { score, totalPoints, correctCount, results, accepted } = gradeAnswers(
-    attempt.quiz.questions,
-    input.answers
-  );
+  const { score, accepted } = gradeAnswers(attempt.quiz.questions, input.answers);
 
   await prisma.$transaction(async (tx) => {
     // Yalnızca hâlâ açık olan denemeyi kapat (aynı anda iki gönderim olursa biri reddedilir)
@@ -224,13 +223,61 @@ export async function submitQuiz(userId: string, quizId: string, input: SubmitQu
     }
   });
 
-  // Doğru şıkların kendisi gönderilmez; yalnızca kullanıcının cevabı doğru mu yanlış mı
+  // Quiz tek seferlik olduğu için gönderimden sonra doğru cevaplar ve açıklamalar gösterilir
+  return getAttemptResult(userId, quizId);
+}
+
+// Tamamlanmış bir denemenin sonucu: her soru için kullanıcının cevabı, doğru şık ve açıklama.
+// Doğru cevaplar yalnızca deneme bittikten sonra ve yalnızca denemenin sahibine gösterilir.
+export async function getAttemptResult(userId: string, quizId: string) {
+  const attempt = await prisma.quizAttempt.findUnique({
+    where: { userId_quizId: { userId, quizId } },
+    include: {
+      answers: { select: { questionId: true, optionId: true } },
+      quiz: {
+        select: {
+          id: true,
+          title: true,
+          questions: {
+            orderBy: [{ order: "asc" }, { id: "asc" }],
+            select: {
+              id: true,
+              text: true,
+              explanation: true,
+              points: true,
+              options: { orderBy: { id: "asc" }, select: { id: true, text: true, isCorrect: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!attempt?.finishedAt) throw Errors.notFound("Bu quiz için tamamlanmış bir denemeniz yok");
+
+  const selected = new Map(attempt.answers.map((a) => [a.questionId, a.optionId]));
+  const questions = attempt.quiz.questions.map((question) => {
+    const selectedOptionId = selected.get(question.id) ?? null;
+    const correctOptionId = question.options.find((o) => o.isCorrect)?.id ?? null;
+    return {
+      id: question.id,
+      text: question.text,
+      explanation: question.explanation,
+      points: question.points,
+      options: question.options.map(({ id, text }) => ({ id, text })),
+      selectedOptionId,
+      correctOptionId,
+      isCorrect: selectedOptionId !== null && selectedOptionId === correctOptionId,
+    };
+  });
+
   return {
-    score,
-    totalPoints,
-    correctCount,
-    questionCount: results.length,
-    results,
+    quiz: { id: attempt.quiz.id, title: attempt.quiz.title },
+    score: attempt.score,
+    totalPoints: questions.reduce((sum, q) => sum + q.points, 0),
+    correctCount: questions.filter((q) => q.isCorrect).length,
+    questionCount: questions.length,
+    finishedAt: attempt.finishedAt,
+    questions,
   };
 }
 
@@ -402,6 +449,7 @@ export async function createQuestion(adminId: string, quizId: string, input: Que
       data: {
         quizId,
         text: input.text,
+        explanation: input.explanation ?? null,
         points: input.points,
         order,
         options: { create: input.options.map((o) => ({ text: o.text, isCorrect: o.isCorrect })) },
@@ -438,6 +486,7 @@ export async function updateQuestion(
       where: { id: questionId },
       data: {
         text: input.text,
+        explanation: input.explanation ?? null,
         points: input.points,
         order: input.order,
         options: { create: input.options.map((o) => ({ text: o.text, isCorrect: o.isCorrect })) },

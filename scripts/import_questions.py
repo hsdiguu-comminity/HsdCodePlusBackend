@@ -1,13 +1,14 @@
 """JSON dosyasından toplu quiz/soru aktarımı (admin kolaylığı).
 
-Kullanım:  python scripts/import_questions.py [dosya.json]
+Kullanım:  python scripts/import_questions.py [dosya.json] [--admin admin@ornek.com]
 Varsayılan dosya: scripts/data/questions.json
+--admin verilirse quizlerin sahibi bu admin olur (JSON'daki created_by_email yok sayılır).
 Quizler TASLAK olarak eklenir; admin panelinden kontrol edilip yayınlanır.
 Tüm dosya tek transaction'da aktarılır: bir hata olursa hiçbir şey eklenmez.
 """
 
+import argparse
 import json
-import sys
 from pathlib import Path
 
 from db import get_connection, new_id
@@ -42,6 +43,8 @@ def validate_quiz(quiz, index):
             raise ValueError(f"{q_prefix}: Nesne bekleniyor.")
         if not isinstance(question.get("text"), str) or not question["text"].strip():
             raise ValueError(f"{q_prefix}: Soru metni zorunludur.")
+        if question.get("explanation") is not None and not isinstance(question["explanation"], str):
+            raise ValueError(f"{q_prefix}: explanation metin olmalıdır.")
 
         points = question.get("points")
         if type(points) is not int or points <= 0:
@@ -62,7 +65,7 @@ def validate_quiz(quiz, index):
             raise ValueError(f"{q_prefix}: Tam olarak bir doğru seçenek olmalıdır.")
 
 
-def import_questions(data_file: Path):
+def import_questions(data_file: Path, admin_email: str | None = None):
     if not data_file.is_file():
         raise FileNotFoundError(f"JSON dosyası bulunamadı: {data_file}")
 
@@ -70,6 +73,11 @@ def import_questions(data_file: Path):
         quizzes = json.load(file)
     if not isinstance(quizzes, list) or not quizzes:
         raise ValueError("JSON, en az bir test içeren liste olmalıdır.")
+
+    if admin_email:
+        for quiz in quizzes:
+            if isinstance(quiz, dict):
+                quiz["created_by_email"] = admin_email
 
     for index, quiz in enumerate(quizzes, start=1):
         validate_quiz(quiz, index)
@@ -115,8 +123,8 @@ def import_questions(data_file: Path):
             for order, question in enumerate(quiz["questions"]):
                 question_id = new_id()
                 cur.execute(
-                    'INSERT INTO questions (id, quiz_id, text, points, "order") VALUES (%s, %s, %s, %s, %s)',
-                    (question_id, quiz_id, question["text"], question["points"], order),
+                    'INSERT INTO questions (id, quiz_id, text, explanation, points, "order") VALUES (%s, %s, %s, %s, %s, %s)',
+                    (question_id, quiz_id, question["text"], question.get("explanation"), question["points"], order),
                 )
                 for option in question["options"]:
                     cur.execute(
@@ -130,4 +138,8 @@ def import_questions(data_file: Path):
 
 
 if __name__ == "__main__":
-    import_questions(Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_FILE)
+    parser = argparse.ArgumentParser(description="JSON dosyasından quiz aktarımı")
+    parser.add_argument("file", nargs="?", type=Path, default=DEFAULT_FILE)
+    parser.add_argument("--admin", help="Quizlerin sahibi olacak adminin e-postası")
+    args = parser.parse_args()
+    import_questions(args.file, args.admin.strip().lower() if args.admin else None)
