@@ -1,78 +1,37 @@
-
-import { NextRequest, NextResponse } from "next/server";
-import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { NextResponse } from "next/server";
+import { Errors, handleApiError } from "@/lib/errors";
 import { requireUser } from "@/lib/guards";
-import { validateUpload } from "@/lib/upload";
+import { MAX_UPLOAD_BYTES, saveUpload, validateUpload } from "@/lib/upload";
 
 export const runtime = "nodejs";
 
-export async function POST(request: NextRequest) {
+// POST /api/uploads — multipart/form-data, alan adı "file" — JPG/PNG/WebP, en fazla 2 MB
+export async function POST(req: Request) {
   try {
     await requireUser();
 
-    const formData = await request.formData();
-    const file = formData.get("file");
-
-    if (!(file instanceof File)) {
-      return NextResponse.json(
-        { error: "Yüklenecek bir görsel seçmelisiniz." },
-        { status: 400 },
-      );
+    // Büyük dosyayı belleğe almadan önce boyutu kontrol et
+    const declaredSize = Number(req.headers.get("content-length") ?? 0);
+    if (declaredSize > MAX_UPLOAD_BYTES + 64 * 1024) {
+      throw Errors.badRequest("Görsel en fazla 2 MB olabilir");
     }
 
-    const validation = validateUpload({
-      name: file.name,
-      type: file.type,
-      size: file.size,
-    });
+    let formData: FormData;
+    try {
+      formData = await req.formData();
+    } catch {
+      throw Errors.badRequest("İstek multipart/form-data biçiminde olmalı");
+    }
+
+    const file = formData.get("file");
+    if (!(file instanceof File)) throw Errors.badRequest("Yüklenecek bir görsel seçin");
 
     const bytes = Buffer.from(await file.arrayBuffer());
+    const { filename } = validateUpload(file, bytes);
+    const url = await saveUpload(filename, bytes);
 
-    if (bytes.length === 0 || bytes.length > 2 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: "Dosya boş veya 2 MB sınırını aşıyor." },
-        { status: 400 },
-      );
-    }
-
-    const uploadDirectory = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadDirectory, { recursive: true });
-
-    const filename = `${randomUUID()}${path.extname(validation.filename) === "" ? ".img" : path.extname(validation.filename)}`;
-
-    await writeFile(path.join(uploadDirectory, filename), bytes, {
-      flag: "wx",
-    });
-
-    return NextResponse.json(
-      { url: `/uploads/${filename}` },
-      { status: 201 },
-    );
+    return NextResponse.json({ url }, { status: 201 });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Görsel yüklenemedi.";
-
-    if (message.toLowerCase().includes("unauthorized")) {
-      return NextResponse.json(
-        { error: "Giriş yapmalısınız." },
-        { status: 401 },
-      );
-    }
-
-    if (
-      message.includes("MB") ||
-      message.includes("uzantısı") ||
-      message.includes("yüklenebilir") ||
-      message.includes("Boş dosya")
-    ) {
-      return NextResponse.json({ error: message }, { status: 400 });
-    }
-
-    return NextResponse.json(
-      { error: "Görsel yüklenemedi." },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

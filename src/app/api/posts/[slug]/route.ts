@@ -1,86 +1,44 @@
-
-import { NextRequest, NextResponse } from "next/server";
-import {
-  getPublishedPostBySlug,
-  updatePost,
-  deletePost,
-} from "@/services/post.service";
-import { updatePostSchema } from "@/lib/validations/post";
+import { NextResponse } from "next/server";
+import { handleApiError, readJson } from "@/lib/errors";
 import { requireUser } from "@/lib/guards";
+import { updatePostSchema } from "@/lib/validations/post";
+import { deletePost, getPublishedPost, updatePost } from "@/services/post.service";
 
-type RouteContext = {
-  params: Promise<{ slug: string }>;
-};
+// Not: Next.js aynı klasörde hem [slug] hem [id] kullanmaya izin vermez.
+// GET slug ile çalışır; PATCH ve DELETE yazının id'sini veya slug'ını kabul eder.
+type Context = { params: Promise<{ slug: string }> };
 
-export async function GET(
-  _request: NextRequest,
-  { params }: RouteContext,
-) {
+// GET /api/posts/[slug] — yayındaki yazı (contentHtml: güvenli HTML)
+export async function GET(_req: Request, { params }: Context) {
   try {
     const { slug } = await params;
-    const post = await getPublishedPostBySlug(slug);
-
-    if (!post) {
-      return NextResponse.json(
-        { error: "Gönderi bulunamadı." },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({ post });
-  } catch {
-    return NextResponse.json(
-      { error: "Gönderi alınamadı." },
-      { status: 500 },
-    );
+    return NextResponse.json({ post: await getPublishedPost(slug) });
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: RouteContext,
-) {
+// PATCH /api/posts/[id veya slug] — yazar, onaylanmamış yazısını düzenler (yeniden onaya düşer)
+export async function PATCH(req: Request, { params }: Context) {
   try {
     const user = await requireUser();
     const { slug } = await params;
-    const body: unknown = await request.json();
-    const parsed = updatePostSchema.safeParse(body);
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Gönderi bilgileri geçersiz." },
-        { status: 400 },
-      );
-    }
-
-    const post = await updatePost(slug, user.id, parsed.data);
-
-    return NextResponse.json({ post });
-  } catch {
-    return NextResponse.json(
-      { error: "Gönderi güncellenemedi veya yetkiniz yok." },
-      { status: 403 },
-    );
+    const input = updatePostSchema.parse(await readJson(req));
+    const post = await updatePost(user, slug, input);
+    return NextResponse.json({ post, message: "Yazınız güncellendi ve yeniden onaya gönderildi" });
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: RouteContext,
-) {
+// DELETE /api/posts/[id veya slug] — yazar kendi yazısını, admin her yazıyı silebilir
+export async function DELETE(_req: Request, { params }: Context) {
   try {
-    const user = await requireUser();
+    const user = await requireUser({ allowRestricted: true });
     const { slug } = await params;
-
-    await deletePost(slug, user.id);
-
-    return NextResponse.json(
-      { message: "Gönderi silindi." },
-    );
-  } catch {
-    return NextResponse.json(
-      { error: "Gönderi silinemedi veya yetkiniz yok." },
-      { status: 403 },
-    );
+    await deletePost(user, slug);
+    return NextResponse.json({ message: "Yazı silindi" });
+  } catch (error) {
+    return handleApiError(error);
   }
 }
