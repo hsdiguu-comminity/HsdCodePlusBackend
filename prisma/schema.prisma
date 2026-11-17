@@ -170,11 +170,13 @@ model Quiz {
 }
 
 model Question {
-  id     String @id @default(cuid())
-  quizId String @map("quiz_id")
-  text   String
-  points Int    @default(10)
-  order  Int
+  id          String  @id @default(cuid())
+  quizId      String  @map("quiz_id")
+  text        String
+  // Quiz gönderildikten sonra doğru cevapla birlikte gösterilen açıklama
+  explanation String?
+  points      Int     @default(10)
+  order       Int
 
   quiz    Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
   options Option[]

@@ -29,6 +29,5 @@ jobs:
       - name: Testler
         run: npx vitest run --passWithNoTests
 
-      # TODO: Tüm route.ts dosyaları doldurulunca build adımı açılacak
-      # - name: Build
-      #   run: npm run build
+      - name: Build
+        run: npm run build
