@@ -1,0 +1,719 @@
+[
+  {
+    "category_slug": "hsd",
+    "title": "HSD'yi Ne Kadar Tanıyorsun?",
+    "description": "HSD programı, öğrenci gelişimi ve HSDCode+ hakkında genel bilgiler.",
+    "time_limit_sec": 480,
+    "created_by_email": "admin@hsdcode.local",
+    "questions": [
+      {
+        "text": "HSD kısaltmasının açılımı nedir?",
+        "explanation": "HSD, Huawei Student Developers anlamına gelir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Huawei Software Design",
+            "is_correct": false
+          },
+          {
+            "text": "Huawei Student Developers",
+            "is_correct": true
+          },
+          {
+            "text": "High System Development",
+            "is_correct": false
+          },
+          {
+            "text": "Human Science Department",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "HSD programının temel hedeflerinden biri hangisidir?",
+        "explanation": "Program öğrencilerin teknik ve kişisel gelişimini desteklemeyi amaçlar.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Öğrencilerin teknoloji alanında gelişmesini desteklemek",
+            "is_correct": true
+          },
+          {
+            "text": "Yalnızca donanım satmak",
+            "is_correct": false
+          },
+          {
+            "text": "Üniversite derslerini kaldırmak",
+            "is_correct": false
+          },
+          {
+            "text": "Sadece deneyimli yazılımcılara hitap etmek",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "HSD hangi alanla en yakından ilişkilidir?",
+        "explanation": "HSD teknoloji ve geliştirici ekosistemiyle ilişkilidir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Tarım makineleri üretimi",
+            "is_correct": false
+          },
+          {
+            "text": "Moda tasarımı",
+            "is_correct": false
+          },
+          {
+            "text": "Teknoloji ve yazılım geliştirme",
+            "is_correct": true
+          },
+          {
+            "text": "Turizm rehberliği",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "Bir öğrenci topluluğunda ekip çalışması neden önemlidir?",
+        "explanation": "Ekip çalışması farklı becerilerin bir araya gelmesini sağlar.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Bütün görevleri tek kişinin yapması için",
+            "is_correct": false
+          },
+          {
+            "text": "İletişimi ve ortak üretimi desteklemek için",
+            "is_correct": true
+          },
+          {
+            "text": "Bilgi paylaşımını engellemek için",
+            "is_correct": false
+          },
+          {
+            "text": "Projeleri gereksiz yere uzatmak için",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "HSD ekosistemindeki teknik gelişim alanlarından biri hangisidir?",
+        "explanation": "Makine öğrenmesi teknoloji ve yazılım alanlarından biridir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Makine öğrenmesi",
+            "is_correct": true
+          },
+          {
+            "text": "Yalnızca yemek tarifi yazımı",
+            "is_correct": false
+          },
+          {
+            "text": "Dekorasyon alışverişi",
+            "is_correct": false
+          },
+          {
+            "text": "Seyahat rezervasyonu",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "Teknik bir atölyenin öğrencilere sağlayabileceği yarar nedir?",
+        "explanation": "Atölyeler bilgiyi uygulamalı olarak öğrenmeye yardımcı olabilir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Uygulama yapmadan beklemek",
+            "is_correct": false
+          },
+          {
+            "text": "Teknolojilerden uzaklaşmak",
+            "is_correct": false
+          },
+          {
+            "text": "Teorik bilgiyi uygulamayla pekiştirmek",
+            "is_correct": true
+          },
+          {
+            "text": "Kod yazmayı bırakmak",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "Bir proje çalışması neyi destekler?",
+        "explanation": "Projeler problem çözme, iletişim ve uygulama deneyimi kazandırabilir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Problem çözme ve ortak üretim becerilerini",
+            "is_correct": true
+          },
+          {
+            "text": "Takım içi iletişimin kesilmesini",
+            "is_correct": false
+          },
+          {
+            "text": "Kodların hiç test edilmemesini",
+            "is_correct": false
+          },
+          {
+            "text": "Bilgi paylaşımının kaldırılmasını",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "HSDCode+ platformunun bu projedeki temel amacı nedir?",
+        "explanation": "HSDCode+ teknik içerikler ve testlerle öğrenmeyi desteklemeyi hedefler.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Sadece bilgisayarı hızlandırmak",
+            "is_correct": false
+          },
+          {
+            "text": "Teknik içerik ve testlerle öğrenmeyi desteklemek",
+            "is_correct": true
+          },
+          {
+            "text": "İşletim sistemi kurmak",
+            "is_correct": false
+          },
+          {
+            "text": "İnternet bağlantısını yönetmek",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "İGÜ HSD Gelişim çalışmalarının temel hedeflerinden biri hangisidir?",
+        "explanation": "Öğrenci odaklı öğrenme ve üretim bu bölümün ana hedeflerindendir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Öğrencileri projelerden uzak tutmak",
+            "is_correct": false
+          },
+          {
+            "text": "Sadece sınav notlarını listelemek",
+            "is_correct": false
+          },
+          {
+            "text": "Teknoloji alanında öğrenme ve proje üretimini desteklemek",
+            "is_correct": true
+          },
+          {
+            "text": "Yazılım öğrenmeyi yasaklamak",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "Bir öğrenci topluluktan en iyi şekilde nasıl yararlanabilir?",
+        "explanation": "Katılım, paylaşım ve uygulama topluluk deneyimini güçlendirebilir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Çalışmalara katılıp bilgi paylaşarak",
+            "is_correct": true
+          },
+          {
+            "text": "Hiçbir şey öğrenmeden bekleyerek",
+            "is_correct": false
+          },
+          {
+            "text": "Ekip arkadaşlarıyla iletişim kurmayarak",
+            "is_correct": false
+          },
+          {
+            "text": "Yeni teknolojileri takip etmeyerek",
+            "is_correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "category_slug": "yapay-zeka",
+    "title": "Yapay Zekâ Testi",
+    "description": "Yapay zekâ ve makine öğrenmesi hakkında temel yazılım bilgileri.",
+    "time_limit_sec": 600,
+    "created_by_email": "admin@hsdcode.local",
+    "questions": [
+      {
+        "text": "Yapay zekâ (AI) genel olarak neyi ifade eder?",
+        "explanation": "AI, insan zekâsıyla ilişkilendirilen bazı görevleri yerine getiren sistemleri kapsar.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Bilgisayarların yalnızca dosya saklamasını",
+            "is_correct": false
+          },
+          {
+            "text": "Sistemlerin öğrenme, tahmin veya karar verme gibi görevleri gerçekleştirmesini",
+            "is_correct": true
+          },
+          {
+            "text": "Sadece bilgisayar parçalarını",
+            "is_correct": false
+          },
+          {
+            "text": "Yalnızca internet bağlantısını",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "Makine öğrenmesi (Machine Learning) nedir?",
+        "explanation": "Makine öğrenmesi verilerden örüntü öğrenen algoritmalara odaklanır.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Verilerden örüntüler öğrenen yöntemler geliştirme alanı",
+            "is_correct": true
+          },
+          {
+            "text": "Her programı elle satır satır yazmak",
+            "is_correct": false
+          },
+          {
+            "text": "Bilgisayarı fiziksel olarak tamir etmek",
+            "is_correct": false
+          },
+          {
+            "text": "Yalnızca web sayfası tasarlamak",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "Bir yapay zekâ modelinin eğitilmesinde veri neden önemlidir?",
+        "explanation": "Eğitim verileri modelin örüntüler öğrenmesinde önemli rol oynar.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Ekranın rengini belirlemek için",
+            "is_correct": false
+          },
+          {
+            "text": "Klavyeyi çalıştırmak için",
+            "is_correct": false
+          },
+          {
+            "text": "Modelin örüntüler öğrenmesine yardımcı olmak için",
+            "is_correct": true
+          },
+          {
+            "text": "İnterneti her zaman hızlandırmak için",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "Denetimli öğrenme (supervised learning) eğitim verisi genellikle ne içerir?",
+        "explanation": "Denetimli öğrenmede örnekler bilinen hedeflerle veya etiketlerle eşleştirilir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Yalnızca boş dosyalar",
+            "is_correct": false
+          },
+          {
+            "text": "Girdi örnekleri ve bunlara ait hedef etiketler",
+            "is_correct": true
+          },
+          {
+            "text": "Sadece resim dosyalarının isimleri",
+            "is_correct": false
+          },
+          {
+            "text": "Hiçbir örnek içermeyen klasör",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "Bir sınıflandırma modelinin amacı hangisidir?",
+        "explanation": "Sınıflandırma girdileri belirli sınıflara veya kategorilere atar.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Verileri kategorilere ayırmak",
+            "is_correct": true
+          },
+          {
+            "text": "Sadece dosyaları sıkıştırmak",
+            "is_correct": false
+          },
+          {
+            "text": "Bilgisayarı kapatmak",
+            "is_correct": false
+          },
+          {
+            "text": "Her zaman sayı toplamak",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "Aşırı öğrenme (overfitting) ne zaman görülür?",
+        "explanation": "Overfitting, modelin eğitim verisine aşırı uyup genelleme yeteneğini kaybetmesidir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Model hiç eğitim görmediğinde her zaman",
+            "is_correct": false
+          },
+          {
+            "text": "Veri dosyası açılmadığında",
+            "is_correct": false
+          },
+          {
+            "text": "Model eğitim verisine fazla uyup yeni verilerde kötü performans gösterdiğinde",
+            "is_correct": true
+          },
+          {
+            "text": "Bilgisayarın ekranı kapandığında",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "Doğal Dil İşleme (NLP) hangi alanla özellikle ilgilenir?",
+        "explanation": "NLP insan dilini işleme ve anlamlandırma yöntemlerini kapsar.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Yalnızca elektrik devreleriyle",
+            "is_correct": false
+          },
+          {
+            "text": "İnsan dili olan metin ve konuşmayla",
+            "is_correct": true
+          },
+          {
+            "text": "Sadece ekran çözünürlüğüyle",
+            "is_correct": false
+          },
+          {
+            "text": "Yalnızca işlemci sıcaklığıyla",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "Üretken yapay zekâ (Generative AI) ne yapabilir?",
+        "explanation": "Üretken modeller yeni içerikler oluşturabilir; ancak çıktıları hatalı olabilir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Yalnızca bilgisayarı yeniden başlatabilir",
+            "is_correct": false
+          },
+          {
+            "text": "Her zaman hatasız bilgi verebilir",
+            "is_correct": false
+          },
+          {
+            "text": "Yalnızca mevcut dosyaları silebilir",
+            "is_correct": false
+          },
+          {
+            "text": "Metin, görsel veya kod gibi yeni içerikler üretebilir",
+            "is_correct": true
+          }
+        ]
+      },
+      {
+        "text": "Modelin daha önce görmediği verilerdeki performansını ölçmek neden önemlidir?",
+        "explanation": "Görülmemiş verilerde değerlendirme, modelin genelleme başarısını anlamaya yardımcı olur.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Genelleme yeteneğini değerlendirmek için",
+            "is_correct": true
+          },
+          {
+            "text": "Kod satırlarını çoğaltmak için",
+            "is_correct": false
+          },
+          {
+            "text": "Veri türlerini rastgele değiştirmek için",
+            "is_correct": false
+          },
+          {
+            "text": "Modelin adını belirlemek için",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "Yapay zekâ sistemlerinin çıktılarıyla ilgili en doğru yaklaşım hangisidir?",
+        "explanation": "Yapay zekâ çıktıları hatalı veya yanlı olabilir; doğrulama önemlidir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Her çıktıyı sorgulamadan doğru kabul etmek",
+            "is_correct": false
+          },
+          {
+            "text": "Test etmeye gerek duymamak",
+            "is_correct": false
+          },
+          {
+            "text": "Sonuçları kontrol etmek ve hataları değerlendirmek",
+            "is_correct": true
+          },
+          {
+            "text": "Veri kalitesini önemsiz saymak",
+            "is_correct": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "category_slug": "web",
+    "title": "JavaScript Yazım Kuralları",
+    "description": "Değişken isimleri, anahtar kelimeler, veri tipleri ve JavaScript sözdizimi.",
+    "time_limit_sec": 600,
+    "created_by_email": "admin@hsdcode.local",
+    "questions": [
+      {
+        "text": "JavaScript'te değişken tanımlamak için hangi anahtar kelimeler kullanılabilir?",
+        "explanation": "JavaScript'te değişken tanımlamak için let, const ve var kullanılabilir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "make ve create",
+            "is_correct": false
+          },
+          {
+            "text": "let, const ve var",
+            "is_correct": true
+          },
+          {
+            "text": "string ve number",
+            "is_correct": false
+          },
+          {
+            "text": "define ve value",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "Aşağıdaki değişken isimlerinden hangisi geçerlidir?",
+        "explanation": "kullaniciAdi geçerli bir isimdir. İsimler rakamla başlayamaz; let ise anahtar kelimedir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "2isim",
+            "is_correct": false
+          },
+          {
+            "text": "kullanici-adi",
+            "is_correct": false
+          },
+          {
+            "text": "kullaniciAdi",
+            "is_correct": true
+          },
+          {
+            "text": "let",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "JavaScript büyük ve küçük harfleri birbirinden ayırır mı?",
+        "explanation": "JavaScript case-sensitive bir dildir. isim ve Isim farklı tanımlayıcılardır.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Hayır, hiçbir zaman ayırmaz",
+            "is_correct": false
+          },
+          {
+            "text": "Sadece HTML dosyalarında ayırır",
+            "is_correct": false
+          },
+          {
+            "text": "Yalnızca değişkenlerde ayırmaz",
+            "is_correct": false
+          },
+          {
+            "text": "Evet, büyük ve küçük harf duyarlıdır",
+            "is_correct": true
+          }
+        ]
+      },
+      {
+        "text": "Hangisi tek satırlık JavaScript yorumudur?",
+        "explanation": "JavaScript'te // tek satırlık yorum başlatır.",
+        "points": 10,
+        "options": [
+          {
+            "text": "// Bu bir yorumdur",
+            "is_correct": true
+          },
+          {
+            "text": "<!-- Bu bir yorumdur -->",
+            "is_correct": false
+          },
+          {
+            "text": "** Bu bir yorumdur",
+            "is_correct": false
+          },
+          {
+            "text": "## Bu bir yorumdur",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "const ile tanımlanan değişken hakkında hangisi doğrudur?",
+        "explanation": "const ile tanımlanan bağ yeniden atanamaz; ancak nesne veya dizi içeriği değişebilir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Her zaman sayı tutmalıdır",
+            "is_correct": false
+          },
+          {
+            "text": "Tanımlandıktan sonra yeniden başka bir değere atanamaz",
+            "is_correct": true
+          },
+          {
+            "text": "Sadece fonksiyon içinde kullanılabilir",
+            "is_correct": false
+          },
+          {
+            "text": "İsmi mutlaka büyük yazılmalıdır",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "JavaScript'te metin değeri nasıl yazılabilir?",
+        "explanation": "Metinler 'metin', \"metin\" veya `metin` biçiminde yazılabilir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Sadece köşeli parantezle",
+            "is_correct": false
+          },
+          {
+            "text": "Yalnızca süslü parantezle",
+            "is_correct": false
+          },
+          {
+            "text": "Tek tırnak, çift tırnak veya backtick ile",
+            "is_correct": true
+          },
+          {
+            "text": "Yalnızca eğik çizgiyle",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "Hem türü hem değeri karşılaştıran operatör hangisidir?",
+        "explanation": "=== katı eşitlik karşılaştırması yapar; tür dönüşümü uygulamaz.",
+        "points": 10,
+        "options": [
+          {
+            "text": "=",
+            "is_correct": false
+          },
+          {
+            "text": "!=",
+            "is_correct": false
+          },
+          {
+            "text": "==",
+            "is_correct": false
+          },
+          {
+            "text": "===",
+            "is_correct": true
+          }
+        ]
+      },
+      {
+        "text": "Hangisi geçerli bir JavaScript fonksiyon tanımıdır?",
+        "explanation": "function selam() {} geçerli bir fonksiyon bildirimi örneğidir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "function selam() {}",
+            "is_correct": true
+          },
+          {
+            "text": "function = selam()",
+            "is_correct": false
+          },
+          {
+            "text": "selam function =>",
+            "is_correct": false
+          },
+          {
+            "text": "def selam():",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "JavaScript'te dizi oluşturmak için hangi sözdizimi kullanılır?",
+        "explanation": "Diziler köşeli parantezle oluşturulur: [\"mavi\", \"yeşil\"].",
+        "points": 10,
+        "options": [
+          {
+            "text": "let renkler = (\"mavi\", \"yeşil\");",
+            "is_correct": false
+          },
+          {
+            "text": "let renkler = [\"mavi\", \"yeşil\"];",
+            "is_correct": true
+          },
+          {
+            "text": "let renkler = <\"mavi\", \"yeşil\">;",
+            "is_correct": false
+          },
+          {
+            "text": "let renkler = {\"mavi\", \"yeşil\"};",
+            "is_correct": false
+          }
+        ]
+      },
+      {
+        "text": "JavaScript değişken ismi için hangi kural doğrudur?",
+        "explanation": "Tanımlayıcılar harf, _ veya $ ile başlayabilir; devamında rakam da bulunabilir.",
+        "points": 10,
+        "options": [
+          {
+            "text": "Her zaman rakamla başlamalıdır",
+            "is_correct": false
+          },
+          {
+            "text": "Boşluk içermesi zorunludur",
+            "is_correct": false
+          },
+          {
+            "text": "Harf, alt çizgi (_) veya dolar işareti ($) ile başlayabilir; rakamla başlayamaz",
+            "is_correct": true
+          },
+          {
+            "text": "Mutlaka Türkçe karakter içermelidir",
+            "is_correct": false
+          }
+        ]
+      }
+    ]
+  }
+]

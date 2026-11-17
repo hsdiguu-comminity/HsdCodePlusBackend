@@ -1,12 +1,20 @@
+// HSDCode+ veritabanı şeması — bkz. docs/02_BACKEND.md, bölüm 3.
+// Bağlantı adresi prisma.config.ts içinde, .env dosyasındaki DATABASE_URL'den okunur.
+// Kodda alan adları camelCase (passwordHash), veritabanında snake_case (password_hash) olarak tutulur.
+// Tablo yapısı yalnızca migration ile değiştirilir: npm run db:migrate
+
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-enum UserRole {
+// ---------- Enum'lar ----------
+
+enum Role {
   MEMBER
   ADMIN
 }
@@ -25,7 +33,7 @@ enum PostStatus {
   REJECTED
 }
 
-enum ScoreEventSource {
+enum ScoreSource {
   QUIZ
   POST_APPROVED
   BONUS
@@ -36,9 +44,11 @@ enum BanType {
   BAN
 }
 
+// ---------- Topluluk & Kullanıcı ----------
+
 model HsdCommunity {
-  id         Int    @id @default(autoincrement())
-  name       String
+  id         String @id @default(cuid())
+  name       String @unique
   university String
   city       String
 
@@ -48,47 +58,51 @@ model HsdCommunity {
 }
 
 model User {
-  id           Int        @id @default(autoincrement())
+  id           String     @id @default(cuid())
   email        String     @unique
-  passwordHash String
-  firstName    String
-  lastName     String
+  passwordHash String     @map("password_hash")
+  firstName    String     @map("first_name")
+  lastName     String     @map("last_name")
   username     String     @unique
-  communityId  Int
-  role         UserRole   @default(MEMBER)
+  communityId  String     @map("community_id")
+  role         Role       @default(MEMBER)
   status       UserStatus @default(PENDING)
-  createdAt    DateTime   @default(now())
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
 
-  community           HsdCommunity         @relation(fields: [communityId], references: [id])
-  profile             Profile?
-  posts               Post[]
-  quizAttempts        QuizAttempt[]
-  scoreEvents         ScoreEvent[]
-  passwordResetTokens PasswordResetToken[]
-  createdQuizzes      Quiz[]               @relation("QuizCreator")
-  bans                Ban[]                @relation("UserBans")
-  adminBans           Ban[]                @relation("AdminBans")
-  auditLogs           AuditLog[]           @relation("AdminAuditLogs")
+  community      HsdCommunity         @relation(fields: [communityId], references: [id])
+  profile        Profile?
+  posts          Post[]
+  createdQuizzes Quiz[]
+  quizAttempts   QuizAttempt[]
+  scoreEvents    ScoreEvent[]
+  bans           Ban[]                @relation("BannedUser")
+  issuedBans     Ban[]                @relation("BanAdmin")
+  resetTokens    PasswordResetToken[]
+  auditLogs      AuditLog[]
 
-  @@index([communityId, status])
+  @@index([communityId])
+  @@index([status])
   @@map("users")
 }
 
 model Profile {
-  userId      Int     @id
+  userId      String  @id @map("user_id")
   bio         String?
-  avatarUrl   String?
-  githubUrl   String?
-  linkedinUrl String?
+  avatarUrl   String? @map("avatar_url")
+  githubUrl   String? @map("github_url")
+  linkedinUrl String? @map("linkedin_url")
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profiles")
 }
 
+// ---------- Kategori & Blog ----------
+
 model Category {
-  id   Int    @id @default(autoincrement())
-  name String
+  id   String @id @default(cuid())
+  name String @unique
   slug String @unique
 
   posts   Post[]
@@ -98,169 +112,182 @@ model Category {
 }
 
 model Post {
-  id           Int        @id @default(autoincrement())
-  authorId     Int
-  categoryId   Int
+  id           String     @id @default(cuid())
+  authorId     String     @map("author_id")
+  categoryId   String     @map("category_id")
   title        String
   slug         String     @unique
-  contentMd    String
-  coverUrl     String?
-  status       PostStatus @default(DRAFT)
-  rejectReason String?
-  publishedAt  DateTime?
+  contentMd    String     @map("content_md")
+  coverUrl     String?    @map("cover_url")
+  status       PostStatus @default(PENDING)
+  rejectReason String?    @map("reject_reason")
+  publishedAt  DateTime?  @map("published_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
 
   author   User        @relation(fields: [authorId], references: [id])
   category Category    @relation(fields: [categoryId], references: [id])
   images   PostImage[]
 
   @@index([status, publishedAt])
+  @@index([authorId])
+  @@index([categoryId])
   @@map("posts")
 }
 
+model PostImage {
+  id     String @id @default(cuid())
+  postId String @map("post_id")
+  url    String
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@map("post_images")
+}
+
+// ---------- Quiz ----------
+
 model Quiz {
-  id           Int       @id @default(autoincrement())
-  categoryId   Int
+  id           String    @id @default(cuid())
+  categoryId   String    @map("category_id")
   title        String
   description  String?
-  timeLimitSec Int?
-  startsAt     DateTime?
-  endsAt       DateTime?
-  isPublished  Boolean   @default(false)
-  createdById  Int
+  timeLimitSec Int       @map("time_limit_sec")
+  startsAt     DateTime? @map("starts_at")
+  endsAt       DateTime? @map("ends_at")
+  isPublished  Boolean   @default(false) @map("is_published")
+  createdById  String    @map("created_by")
+  createdAt    DateTime  @default(now()) @map("created_at")
 
   category  Category      @relation(fields: [categoryId], references: [id])
-  createdBy User          @relation("QuizCreator", fields: [createdById], references: [id])
+  createdBy User          @relation(fields: [createdById], references: [id])
   questions Question[]
   attempts  QuizAttempt[]
 
-  @@index([isPublished, startsAt, endsAt])
   @@index([categoryId, isPublished])
   @@map("quizzes")
 }
 
 model Question {
-  id     Int    @id @default(autoincrement())
-  quizId Int
-  text   String
-  points Int
-  order  Int
+  id          String  @id @default(cuid())
+  quizId      String  @map("quiz_id")
+  text        String
+  // Quiz gönderildikten sonra doğru cevapla birlikte gösterilen açıklama
+  explanation String?
+  points      Int     @default(10)
+  order       Int
 
-  quiz           Quiz            @relation(fields: [quizId], references: [id])
-  options        Option[]
-  attemptAnswers AttemptAnswer[]
+  quiz    Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options Option[]
+  answers AttemptAnswer[]
 
-  @@unique([quizId, order])
+  @@index([quizId, order])
   @@map("questions")
 }
 
 model Option {
-  id         Int     @id @default(autoincrement())
-  questionId Int
+  id         String  @id @default(cuid())
+  questionId String  @map("question_id")
   text       String
-  isCorrect  Boolean @default(false)
+  isCorrect  Boolean @default(false) @map("is_correct")
 
-  question       Question        @relation(fields: [questionId], references: [id])
-  attemptAnswers AttemptAnswer[]
+  question Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  AttemptAnswer[]
 
+  @@index([questionId])
   @@map("options")
 }
 
 model QuizAttempt {
-  id         Int       @id @default(autoincrement())
-  userId     Int
-  quizId     Int
-  score      Int
-  startedAt  DateTime  @default(now())
-  finishedAt DateTime?
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  quizId     String    @map("quiz_id")
+  score      Int       @default(0)
+  startedAt  DateTime  @default(now()) @map("started_at")
+  finishedAt DateTime? @map("finished_at")
 
   user    User            @relation(fields: [userId], references: [id])
-  quiz    Quiz            @relation(fields: [quizId], references: [id])
+  quiz    Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
   answers AttemptAnswer[]
 
-  @@index([quizId, score])
-  @@index([userId, quizId])
+  // Bir quiz bir kullanıcı tarafından yalnızca bir kez çözülebilir
+  @@unique([userId, quizId])
   @@map("quiz_attempts")
 }
 
 model AttemptAnswer {
-  id         Int @id @default(autoincrement())
-  attemptId  Int
-  questionId Int
-  optionId   Int
+  attemptId  String @map("attempt_id")
+  questionId String @map("question_id")
+  optionId   String @map("option_id")
 
-  attempt  QuizAttempt @relation(fields: [attemptId], references: [id])
-  question Question    @relation(fields: [questionId], references: [id])
-  option   Option      @relation(fields: [optionId], references: [id])
+  attempt  QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  option   Option      @relation(fields: [optionId], references: [id], onDelete: Cascade)
 
-  @@unique([attemptId, questionId])
+  @@id([attemptId, questionId])
   @@map("attempt_answers")
 }
 
+// ---------- Puan (leaderboard kaynağı) ----------
+
 model ScoreEvent {
-  id        Int              @id @default(autoincrement())
-  userId    Int
+  id        String      @id @default(cuid())
+  userId    String      @map("user_id")
   points    Int
-  source    ScoreEventSource
-  refId     Int?
-  createdAt DateTime         @default(now())
+  source    ScoreSource
+  refId     String?     @map("ref_id")
+  createdAt DateTime    @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
 
-  @@index([createdAt, userId])
+  @@index([createdAt])
   @@index([userId, createdAt])
   @@map("score_events")
 }
 
+// ---------- Moderasyon & Güvenlik ----------
+
 model Ban {
-  id        Int       @id @default(autoincrement())
-  userId    Int
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
   type      BanType
   reason    String
-  adminId   Int
-  expiresAt DateTime?
+  adminId   String    @map("admin_id")
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
 
-  user  User @relation("UserBans", fields: [userId], references: [id])
-  admin User @relation("AdminBans", fields: [adminId], references: [id])
+  user  User @relation("BannedUser", fields: [userId], references: [id])
+  admin User @relation("BanAdmin", fields: [adminId], references: [id])
 
   @@index([userId])
   @@map("bans")
 }
 
 model PasswordResetToken {
-  id        Int       @id @default(autoincrement())
-  userId    Int
-  tokenHash String    @unique
-  expiresAt DateTime
-  usedAt    DateTime?
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId, expiresAt])
+  @@index([userId])
   @@map("password_reset_tokens")
 }
 
 model AuditLog {
-  id         Int      @id @default(autoincrement())
-  adminId    Int
+  id         String   @id @default(cuid())
+  adminId    String   @map("admin_id")
   action     String
-  targetType String
-  targetId   Int
-  createdAt  DateTime @default(now())
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id")
+  createdAt  DateTime @default(now()) @map("created_at")
 
-  admin User @relation("AdminAuditLogs", fields: [adminId], references: [id])
+  admin User @relation(fields: [adminId], references: [id])
 
   @@index([createdAt])
-  @@index([adminId, createdAt])
   @@map("audit_logs")
-}
-
-model PostImage {
-  id     Int    @id @default(autoincrement())
-  postId Int
-  url    String
-
-  post Post @relation(fields: [postId], references: [id])
-
-  @@index([postId])
-  @@map("post_images")
 }

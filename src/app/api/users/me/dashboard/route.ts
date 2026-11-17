@@ -1,228 +1,79 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
+import { handleApiError } from "@/lib/errors";
+import { requireUser } from "@/lib/guards";
+import { toPublicUser } from "@/services/user.service";
+import { getPeriodStarts, getPointTotals, getUserRank } from "@/services/leaderboard.service";
 
-const ISTANBUL_OFFSET_HOURS = 3;
-
-function getIstanbulPeriods() {
-  const now = new Date();
-
-  // İstanbul takvim tarihini UTC parçalarıyla alıyoruz.
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Istanbul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-
-  const year = Number(parts.find((p) => p.type === "year")?.value);
-  const month = Number(parts.find((p) => p.type === "month")?.value);
-  const day = Number(parts.find((p) => p.type === "day")?.value);
-
-  const localDate = new Date(Date.UTC(year, month - 1, day));
-  const dayOfWeek = localDate.getUTCDay();
-  const daysSinceMonday = (dayOfWeek + 6) % 7;
-
-  const toUtc = (y: number, m: number, d: number) =>
-    new Date(
-      Date.UTC(y, m - 1, d, -ISTANBUL_OFFSET_HOURS)
-    );
-
-  return {
-    dayStart: toUtc(year, month, day),
-    weekStart: toUtc(year, month, day - daysSinceMonday),
-    monthStart: toUtc(year, month, 1),
-  };
-}
-
-async function getRank(userId: number, startDate: Date) {
-  const rankings = await prisma.scoreEvent.groupBy({
-    by: ["userId"],
-    where: {
-      createdAt: { gte: startDate },
-      user: { status: "ACTIVE" },
-    },
-    _sum: { points: true },
-    orderBy: [
-      { _sum: { points: "desc" } },
-      { userId: "asc" },
-    ],
-  });
-
-  const index = rankings.findIndex((item) => item.userId === userId);
-
-  return index === -1 ? null : index + 1;
-}
-
+// GET /api/users/me/dashboard — puanlar, sıralar, quiz geçmişi ve yazıların durumu
 export async function GET() {
   try {
-    const session = await auth();
+    const user = await requireUser({ allowRestricted: true });
+    const starts = getPeriodStarts();
 
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { success: false, message: "Oturum bulunamadı." },
-        { status: 401 }
-      );
-    }
-
-    const userId = Number(session.user.id);
-
-    if (!Number.isInteger(userId) || userId <= 0) {
-      return NextResponse.json(
-        { success: false, message: "Geçersiz kullanıcı bilgisi." },
-        { status: 401 }
-      );
-    }
-
-    const { dayStart, weekStart, monthStart } =
-      getIstanbulPeriods();
-
-    const [
-      user,
-      totalPoints,
-      dailyPoints,
-      weeklyPoints,
-      monthlyPoints,
-      quizStats,
-      postStats,
-      dailyRank,
-      weeklyRank,
-      monthlyRank,
-    ] = await Promise.all([
-      prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          username: true,
-          email: true,
-          status: true,
-          community: {
-            select: {
-              id: true,
-              name: true,
-              university: true,
-              city: true,
-            },
+    const [points, dailyRank, weeklyRank, monthlyRank, community, profile, quizStats, attempts, postCounts, posts] =
+      await Promise.all([
+        getPointTotals(user.id),
+        getUserRank(user.id, starts.daily),
+        getUserRank(user.id, starts.weekly),
+        getUserRank(user.id, starts.monthly),
+        prisma.hsdCommunity.findUnique({ where: { id: user.communityId } }),
+        prisma.profile.findUnique({ where: { userId: user.id } }),
+        prisma.quizAttempt.aggregate({
+          where: { userId: user.id, finishedAt: { not: null } },
+          _count: { _all: true },
+          _avg: { score: true },
+          _max: { score: true },
+        }),
+        prisma.quizAttempt.findMany({
+          where: { userId: user.id, finishedAt: { not: null } },
+          orderBy: { finishedAt: "desc" },
+          take: 10,
+          select: {
+            score: true,
+            finishedAt: true,
+            quiz: { select: { id: true, title: true, category: { select: { name: true, slug: true } } } },
           },
-          profile: {
-            select: {
-              bio: true,
-              avatarUrl: true,
-              githubUrl: true,
-              linkedinUrl: true,
-            },
+        }),
+        prisma.post.groupBy({ by: ["status"], where: { authorId: user.id }, _count: { _all: true } }),
+        prisma.post.findMany({
+          where: { authorId: user.id },
+          orderBy: { createdAt: "desc" },
+          take: 20,
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            status: true,
+            rejectReason: true,
+            publishedAt: true,
+            createdAt: true,
+            category: { select: { name: true, slug: true } },
           },
-        },
-      }),
+        }),
+      ]);
 
-      prisma.scoreEvent.aggregate({
-        where: { userId },
-        _sum: { points: true },
-      }),
-
-      prisma.scoreEvent.aggregate({
-        where: { userId, createdAt: { gte: dayStart } },
-        _sum: { points: true },
-      }),
-
-      prisma.scoreEvent.aggregate({
-        where: { userId, createdAt: { gte: weekStart } },
-        _sum: { points: true },
-      }),
-
-      prisma.scoreEvent.aggregate({
-        where: { userId, createdAt: { gte: monthStart } },
-        _sum: { points: true },
-      }),
-
-      prisma.quizAttempt.aggregate({
-        where: {
-          userId,
-          finishedAt: { not: null },
-        },
-        _count: { _all: true },
-        _avg: { score: true },
-        _max: { score: true },
-      }),
-
-      prisma.post.groupBy({
-        by: ["status"],
-        where: { authorId: userId },
-        _count: { _all: true },
-      }),
-
-      getRank(userId, dayStart),
-      getRank(userId, weekStart),
-      getRank(userId, monthStart),
-    ]);
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: "Kullanıcı bulunamadı." },
-        { status: 404 }
-      );
-    }
-
-    if (user.status !== "ACTIVE") {
-      return NextResponse.json(
-        { success: false, message: "Hesap aktif değil." },
-        { status: 403 }
-      );
-    }
-
-    const posts = {
-      total: postStats.reduce(
-        (sum, item) => sum + item._count._all,
-        0
-      ),
-      approved:
-        postStats.find((item) => item.status === "APPROVED")
-          ?._count._all ?? 0,
-      pending:
-        postStats.find((item) => item.status === "PENDING")
-          ?._count._all ?? 0,
-      rejected:
-        postStats.find((item) => item.status === "REJECTED")
-          ?._count._all ?? 0,
-      draft:
-        postStats.find((item) => item.status === "DRAFT")
-          ?._count._all ?? 0,
-    };
+    const countOf = (status: string) => postCounts.find((row) => row.status === status)?._count._all ?? 0;
 
     return NextResponse.json({
-      success: true,
-      dashboard: {
-        user,
-        points: {
-          total: totalPoints._sum.points ?? 0,
-          daily: dailyPoints._sum.points ?? 0,
-          weekly: weeklyPoints._sum.points ?? 0,
-          monthly: monthlyPoints._sum.points ?? 0,
-        },
-        quizzes: {
-          completed: quizStats._count._all,
-          averageScore: quizStats._avg.score ?? 0,
-          highestScore: quizStats._max.score ?? 0,
-        },
-        posts,
-        rankings: {
-          daily: dailyRank,
-          weekly: weeklyRank,
-          monthly: monthlyRank,
-        },
+      user: { ...toPublicUser(user), community, profile },
+      points,
+      rankings: { daily: dailyRank, weekly: weeklyRank, monthly: monthlyRank },
+      quizzes: {
+        completed: quizStats._count._all,
+        averageScore: Math.round(quizStats._avg.score ?? 0),
+        highestScore: quizStats._max.score ?? 0,
+        recent: attempts,
+      },
+      posts: {
+        total: postCounts.reduce((sum, row) => sum + row._count._all, 0),
+        approved: countOf("APPROVED"),
+        pending: countOf("PENDING"),
+        rejected: countOf("REJECTED"),
+        recent: posts,
       },
     });
   } catch (error) {
-    console.error("Dashboard API error:", error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Dashboard bilgileri alınamadı.",
-      },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

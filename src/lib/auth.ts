@@ -1,93 +1,57 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
-import prisma from "@/lib/prisma";
-import type { Session } from "next-auth";
+import { loginSchema } from "@/lib/validations/auth";
+import { verifyPassword } from "@/lib/password";
+import { findUserByEmail } from "@/services/user.service";
+import { liftExpiredPenalty } from "@/services/admin.service";
 
-const nextAuth = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  basePath: "/api/auth",
+  trustHost: true,
   session: {
     strategy: "jwt",
+    maxAge: 7 * 24 * 60 * 60, // 7 gün
   },
-
   providers: [
     Credentials({
-      name: "Credentials",
-
       credentials: {
-        email: {
-          label: "E-posta",
-          type: "email",
-        },
-        password: {
-          label: "Şifre",
-          type: "password",
-        },
+        email: { type: "email" },
+        password: { type: "password" },
       },
-
       async authorize(credentials) {
-        const email =
-          typeof credentials?.email === "string"
-            ? credentials.email.trim().toLowerCase()
-            : "";
+        const parsed = loginSchema.safeParse(credentials);
+        if (!parsed.success) return null;
 
-        const password =
-          typeof credentials?.password === "string"
-            ? credentials.password
-            : "";
+        const found = await findUserByEmail(parsed.data.email);
+        if (!found) return null;
+        if (!(await verifyPassword(found.passwordHash, parsed.data.password))) return null;
 
-        if (!email || !password) {
-          return null;
-        }
+        const user = await liftExpiredPenalty(found);
 
-        const user = await prisma.user.findUnique({
-          where: { email },
-        });
-
-        if (!user || user.status !== "ACTIVE") {
-          return null;
-        }
-
-        const passwordValid = await bcrypt.compare(
-          password,
-          user.passwordHash
-        );
-
-        if (!passwordValid) {
-          return null;
-        }
+        // Onay bekleyen ve banlı kullanıcılar oturum açamaz
+        if (user.status === "PENDING" || user.status === "BANNED") return null;
 
         return {
-          id: String(user.id),
+          id: user.id,
           email: user.email,
           name: `${user.firstName} ${user.lastName}`,
+          role: user.role,
         };
       },
     }),
   ],
-
   callbacks: {
-    async jwt({ token, user }) {
-      if (user?.id) {
-        token.sub = String(user.id);
+    jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
       }
-
       return token;
     },
-
-    async session({ session, token }) {
-      if (session.user && token.sub) {
-        session.user.id = token.sub;
-      }
-
+    session({ session, token }) {
+      session.user.id = token.id as string;
+      session.user.role = token.role as "MEMBER" | "ADMIN";
       return session;
     },
   },
-
-  pages: {
-    signIn: "/login",
-  },
 });
-
-export const { handlers, signIn, signOut } = nextAuth;
-
-export const auth: () => Promise<Session | null> = nextAuth.auth;

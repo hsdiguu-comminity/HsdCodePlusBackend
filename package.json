@@ -1,47 +1,51 @@
 {
-  "name": "hsdcodeplusbackend",
-  "version": "1.0.0",
-  "description": "HSDCode+ API'si (Next.js Route Handlers + Prisma + PostgreSQL 16 + Auth.js).",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs",
-    "test": "tests"
-  },
+  "name": "hsdcode-plus-backend",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3000",
     "build": "next build",
-    "start": "next start",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "prisma generate"
+    "start": "next start -p 3000",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hsdiguu-comminity/HsdCodePlusBackend.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
-  "bugs": {
-    "url": "https://github.com/hsdiguu-comminity/HsdCodePlusBackend/issues"
-  },
-  "homepage": "https://github.com/hsdiguu-comminity/HsdCodePlusBackend#readme",
   "dependencies": {
-    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
-    "bcryptjs": "^3.0.3",
-    "next": "^16.4.0",
+    "argon2": "^0.45.1",
+    "next": "15.5.27",
     "next-auth": "^5.0.0-beta.32",
+    "nodemailer": "^8.0.11",
     "pg": "^8.23.1",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "rehype-sanitize": "^6.0.0",
+    "rehype-stringify": "^10.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
+    "unified": "^11.0.5",
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@types/node": "^26.6.4",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
+    "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^22.20.5",
+    "@types/nodemailer": "^8.0.2",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv": "^18.0.5",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.27",
     "prisma": "^7.10.0",
-    "typescript": "^6.0.3"
+    "typescript": "^5",
+    "vitest": "^5.0.3"
   }
 }

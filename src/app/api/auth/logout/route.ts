@@ -1,25 +1,13 @@
 import { NextResponse } from "next/server";
 import { signOut } from "@/lib/auth";
+import { handleApiError } from "@/lib/errors";
 
+// POST /api/auth/logout — oturum çerezini siler
 export async function POST() {
   try {
-    await signOut({
-      redirect: false,
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: "Oturum başarıyla kapatıldı.",
-    });
+    await signOut({ redirect: false });
+    return NextResponse.json({ message: "Çıkış yapıldı" });
   } catch (error) {
-    console.error("Logout API error:", error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Oturum kapatılamadı.",
-      },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

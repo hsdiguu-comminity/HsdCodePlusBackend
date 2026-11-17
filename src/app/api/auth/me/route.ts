@@ -1,33 +1,19 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { requireUser } from "@/lib/guards";
+import { handleApiError } from "@/lib/errors";
+import { toPublicUser } from "@/services/user.service";
 
+// GET /api/auth/me — oturumdaki kullanıcı ve topluluğu (giriş yoksa 401)
 export async function GET() {
   try {
-    const session = await auth();
-
-    if (!session?.user) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Oturum bulunamadı.",
-        },
-        { status: 401 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      user: session.user,
+    const user = await requireUser({ allowRestricted: true });
+    const community = await prisma.hsdCommunity.findUnique({
+      where: { id: user.communityId },
+      select: { id: true, name: true, university: true, city: true },
     });
+    return NextResponse.json({ user: { ...toPublicUser(user), community } });
   } catch (error) {
-    console.error("Auth me API error:", error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Kullanıcı bilgileri alınamadı.",
-      },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

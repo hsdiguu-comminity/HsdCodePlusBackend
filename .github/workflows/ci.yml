@@ -1,36 +1,33 @@
-
-name: Backend CI
+name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
-    branches: [main]
-  workflow_dispatch:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - name: Install dependencies
+      - name: Paketleri kur
         run: npm ci
 
-      - name: TypeScript check
-        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
 
-      - name: Production build
+      - name: Tip kontrolü
+        run: npm run typecheck
+
+      - name: Testler
+        run: npx vitest run --passWithNoTests
+
+      - name: Build
         run: npm run build
-
-

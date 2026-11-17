@@ -32,8 +32,10 @@ Thumbs.db
 .idea/
 
 # Backend
+src/generated/
 uploads/*
 !uploads/.gitkeep
+public/uploads/
 backups/*
 !backups/.gitkeep
 
@@ -42,7 +44,3 @@ __pycache__/
 *.pyc
 .venv/
 venv/
-
-# Test oturum çerezleri
-cookies.txt
-cookies-user2.txt
